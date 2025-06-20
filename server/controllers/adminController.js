@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import 'dotenv/config'
+
 export const adminLogin = async(req,res)=>{
 
  try{
@@ -20,3 +21,7 @@ export const adminLogin = async(req,res)=>{
 
  }
 }
+
+
+
+   
