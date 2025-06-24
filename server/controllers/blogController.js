@@ -4,6 +4,7 @@ import Blog from '../models/Blog.js'
 import comment from '../models/Comment.js';
 
 
+
 export const addBlog = async (req,res)=>{
     try{
 
@@ -26,6 +27,7 @@ export const addBlog = async (req,res)=>{
          
 
        })
+       
 
        const optimizedImageUrl = imagekit.url({
         path:response.filePath,
@@ -89,7 +91,7 @@ export const deleteBlogById =  async(req,res)=>{
     try{ 
          const {id} = req.body;
 
-         await Blog.findByIdAndDelete(id);   await Blog.findByIdAndDelete(id);
+         await Blog.findByIdAndDelete(id);  
          await comment.deleteMany({blog:id})
          res.json({success:true,message:"blog deleted successfully"})
 
@@ -107,7 +109,7 @@ export const publishToggle=async(req,res)=>{
         blog.isPublished = !blog.isPublished;
         await blog.save();
 
-        res.json({success:true, messages:"Publish toggled"})
+        res.json({success:true, message:"Succesfully updated"})
     }
     catch(error){
         res.json({success:false,message:error.message})
@@ -187,4 +189,12 @@ export const getAllBlogsAdmin = async(req,res)=>{
        catch(error){res.json({success:false,message:error.message})
 
        }
+    }
+    export const getAllComments=async(req,res)=>{
+        try {
+            const allcomments=await comment.find({}).sort({ createdAt: -1 })
+      res.json({success:true,allcomments})
+        } catch (error) {
+            res.json({success:false,message:error.message})
+        }
     }
