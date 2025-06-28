@@ -3,7 +3,8 @@ import { assets, blogCategories } from '../../assets/assets'
 import Quill from 'quill';
 import { useAppContext } from '../../context/Appcontext';
 import toast from 'react-hot-toast';
-
+import {parse} from 'marked'
+import {TailSpin} from 'react-loader-spinner'
 
 
 const AddBlog = () => {
@@ -21,17 +22,22 @@ const AddBlog = () => {
     if (!quillRef.current && editorRef.current) {   //“If the <div> is ready and quill is not initialised 
                                                    // befor then create a Quill editor inside it.”
       quillRef.current = new Quill(editorRef.current, { theme:'snow'})
+      quillRef.current.on('text-change',()=>{
+        const html = quillRef.current.root.innerHTML;
+        setDescription(html);
+      })
         
     }
   }, []);
 
 
-
+  const [description,setDescription]=useState("")
   const[image,setImage]=useState(null);
   const[title,setTitle]=useState('')
     const[subTitle,setSubTitle] = useState('')
     const[category,setCategory]=useState('Startup')
     const [isPublished,setIsPublished]=useState(false)
+    const [loading,setLoading]=useState(false);
   
   const onSubmitHandler = async (e) =>{
     try {
@@ -39,7 +45,7 @@ const AddBlog = () => {
       
 
       const blog={
-        title,subTitle,description:quillRef.current.root.innerHTML,
+        title,subTitle,description,
         category,isPublished
       }
 
@@ -65,8 +71,30 @@ const AddBlog = () => {
     }
     }
   
-
+ 
   const generateContent=async()=>{
+
+    if(!description || description.length<10){
+      return toast.error("Please enter a description of atleast 10 characters")
+    }
+      try{
+        setLoading(true);
+         const {data} = await axios.post('/api/admin/generate', {prompt:description})
+          if (data.success) {
+      quillRef.current.root.innerHTML = parse(data.content);
+      setDescription(data.content);
+      toast.success("Blog content generated!");
+
+    } else {
+      toast.error("Failed to generate content.");
+    }
+      }
+      catch(error){
+           toast.error(error.message);
+      }
+      finally{
+        setLoading(false);
+      }
 
   }
   return (
@@ -99,7 +127,17 @@ const AddBlog = () => {
        <p className='mt-4'>Blog Description</p>
        <div className='max-w-lg h-74 pb-16 sm:pb-10 pt-2 relative'>
          <div ref={editorRef} ></div>
-        <button className='absolute bottom-1 right-2 ml-2 text-xs text-white
+         {loading && (
+    <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+      <TailSpin
+        height="30"
+        width="30"
+        color="#6b46c1"
+        ariaLabel="loading"
+      />
+    </div>
+  )}
+        <button disabled={loading} className='absolute bottom-1 right-2 ml-2 text-xs text-white
          bg-black/70 px-4 py-1.5 rounded hover:underline cursor-pointer
          'type='button' onClick={generateContent} >Generate with AI</button>
        </div>
